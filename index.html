@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Maize Warehouse Manager</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f5f5f0; --bg2: #ffffff; --border: #e0ddd6; --text: #1a1a18; --muted: #888880;
+  --green: #2d7a3a; --green-bg: #e8f5eb; --red: #c0392b; --red-bg: #fdecea;
+  --gold: #b8860b; --gold-bg: #fef9e7; --sidebar: #1e1e1a; --sidebar-text: #c8c8c0;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 14px; }
+#app { display: flex; min-height: 100vh; }
+#sidebar { width: 220px; min-height: 100vh; background: var(--sidebar); display: flex; flex-direction: column; position: fixed; left: 0; top: 0; bottom: 0; z-index: 100; transition: transform .25s; }
+#main { margin-left: 220px; flex: 1; min-height: 100vh; }
+.s-logo { padding: 20px 18px 16px; border-bottom: 1px solid #2e2e28; }
+.s-logo h1 { font-size: 14px; font-weight: 700; color: #fff; }
+.s-logo p { font-size: 11px; color: #666; margin-top: 2px; }
+.s-co { padding: 12px 14px; border-bottom: 1px solid #2e2e28; }
+.s-co label { font-size: 10px; color: #555; text-transform: uppercase; letter-spacing: .06em; display: block; margin-bottom: 6px; }
+#coSelect { width: 100%; background: #2a2a26; border: 1px solid #3a3a34; color: #ddd; padding: 7px 10px; border-radius: 6px; font-size: 13px; font-family: 'Inter',sans-serif; appearance: none; outline: none; cursor: pointer; }
+#coSelect:focus { border-color: var(--green); }
+nav { flex: 1; padding: 8px 0; }
+.n-label { padding: 14px 18px 6px; font-size: 10px; color: #444; text-transform: uppercase; letter-spacing: .08em; }
+.n-item { display: flex; align-items: center; gap: 10px; padding: 9px 18px; color: var(--sidebar-text); cursor: pointer; font-size: 13px; font-weight: 500; border-left: 3px solid transparent; transition: all .15s; user-select: none; }
+.n-item:hover { color: #fff; background: #252520; }
+.n-item.active { color: #fff; background: #2e2e28; border-left-color: #4caf50; }
+.n-item span { font-size: 15px; }
+.topbar { background: var(--bg2); border-bottom: 1px solid var(--border); padding: 0 24px; height: 52px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; }
+.topbar h2 { font-size: 15px; font-weight: 600; }
+.ham { display: none; background: none; border: none; font-size: 20px; cursor: pointer; }
+.topbar-actions { display: flex; gap: 8px; }
+.page { display: none; padding: 24px; }
+.page.active { display: block; }
+.stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px,1fr)); gap: 14px; margin-bottom: 24px; }
+.scard { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; }
+.scard-label { font-size: 11px; color: var(--muted); font-weight: 500; margin-bottom: 8px; }
+.scard-val { font-size: 26px; font-weight: 700; line-height: 1; }
+.scard-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
+.scard.green .scard-val { color: var(--green); }
+.scard.red .scard-val { color: var(--red); }
+.scard.gold .scard-val { color: var(--gold); }
+.section { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 20px; }
+.section-head { padding: 14px 18px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.section-head h3 { font-size: 13px; font-weight: 600; }
+.section-body { padding: 18px; }
+.fg { display: flex; flex-direction: column; gap: 5px; }
+.fg label { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+.fg input, .fg select { background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 8px 10px; border-radius: 7px; font-size: 13px; font-family: 'Inter',sans-serif; outline: none; transition: border .15s; width: 100%; }
+.fg input:focus, .fg select:focus { border-color: var(--green); background: #fff; }
+.fgrid { display: grid; grid-template-columns: repeat(auto-fit,minmax(160px,1fr)); gap: 14px; }
+.form-actions { display: flex; gap: 10px; margin-top: 18px; flex-wrap: wrap; }
+.btn { display: inline-flex; align-items: center; gap: 5px; padding: 8px 16px; border-radius: 7px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; font-family: 'Inter',sans-serif; transition: all .15s; }
+.btn-green { background: var(--green); color: #fff; }
+.btn-green:hover { background: #236130; }
+.btn-red { background: var(--red); color: #fff; }
+.btn-red:hover { background: #a93226; }
+.btn-outline { background: #fff; color: var(--text); border: 1px solid var(--border); }
+.btn-outline:hover { border-color: #999; }
+.btn-sm { padding: 5px 12px; font-size: 12px; }
+.btn-icon { padding: 5px 8px; font-size: 13px; }
+.tbl-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; min-width: 480px; }
+th { padding: 10px 12px; font-size: 11px; font-weight: 600; color: var(--muted); text-align: left; border-bottom: 1px solid var(--border); white-space: nowrap; }
+td { padding: 10px 12px; border-bottom: 1px solid var(--border); font-size: 13px; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: #fafaf8; }
+.badge { display: inline-block; padding: 2px 9px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+.badge-green { background: var(--green-bg); color: var(--green); }
+.badge-red { background: var(--red-bg); color: var(--red); }
+.badge-gold { background: var(--gold-bg); color: var(--gold); }
+.tabs { display: flex; gap: 2px; background: var(--bg); padding: 4px; border-radius: 8px; width: fit-content; margin-bottom: 18px; }
+.tab { padding: 7px 18px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; color: var(--muted); transition: all .15s; }
+.tab.active { background: #fff; color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,.1); }
+.empty { padding: 40px; text-align: center; color: var(--muted); }
+.empty p { font-size: 13px; margin-top: 8px; }
+.toolbar { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
+.search-wrap { position: relative; flex: 1; min-width: 150px; }
+.search-wrap input { padding-left: 30px; background: #fff; }
+.search-wrap::before { content: '🔍'; position: absolute; left: 9px; top: 50%; transform: translateY(-50%); font-size: 12px; }
+.modal-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 200; align-items: center; justify-content: center; padding: 16px; }
+.modal-bg.open { display: flex; }
+.modal { background: #fff; border-radius: 12px; width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto; }
+.modal-head { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+.modal-head h3 { font-size: 14px; font-weight: 600; }
+.modal-body { padding: 20px; }
+.modal-foot { padding: 14px 20px; border-top: 1px solid var(--border); display: flex; gap: 8px; justify-content: flex-end; }
+.x-btn { background: none; border: none; font-size: 18px; color: var(--muted); cursor: pointer; }
+#toast { position: fixed; bottom: 20px; right: 20px; background: #1e1e1a; color: #fff; padding: 10px 18px; border-radius: 8px; font-size: 13px; font-weight: 500; z-index: 999; opacity: 0; transform: translateY(10px); transition: all .25s; pointer-events: none; }
+#toast.show { opacity: 1; transform: translateY(0); }
+#sbo { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 99; }
+.warn { color: var(--red); font-size: 13px; margin-bottom: 12px; display: none; }
+@media(max-width:700px){
+  #sidebar { transform: translateX(-100%); }
+  #sidebar.open { transform: translateX(0); }
+  #sbo.show { display: block; }
+  #main { margin-left: 0; }
+  .ham { display: block; }
+  .page { padding: 14px; }
+  .topbar { padding: 0 14px; }
+}
+</style>
+</head>
+<body>
+<div id="sbo" onclick="closeSB()"></div>
+<div id="app">
+<div id="sidebar">
+  <div class="s-logo"><h1>🌽 Maize Manager</h1><p>Warehouse Stock Control</p></div>
+  <div class="s-co">
+    <label>Active Company</label>
+    <select id="coSelect" onchange="switchCo(this.value)"><option value="">— Select —</option></select>
+  </div>
+  <nav>
+    <div class="n-label">Menu</div>
+    <div class="n-item active" onclick="go('dashboard',this)"><span>📊</span> Dashboard</div>
+    <div class="n-item" onclick="go('inward',this)"><span>📥</span> Inward Entry</div>
+    <div class="n-item" onclick="go('outward',this)"><span>📤</span> Outward Entry</div>
+    <div class="n-item" onclick="go('records',this)"><span>📋</span> All Records</div>
+    <div class="n-label">Settings</div>
+    <div class="n-item" onclick="go('companies',this)"><span>🏢</span> Companies</div>
+  </nav>
+</div>
+<div id="main">
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:10px">
+      <button class="ham" onclick="toggleSB()">☰</button>
+      <h2 id="ptitle">Dashboard</h2>
+    </div>
+    <div class="topbar-actions">
+      <button class="btn btn-outline btn-sm" onclick="exportCSV()">↓ Export CSV</button>
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="page-dashboard" class="page active">
+    <div class="stats-row" id="dashStats"></div>
+    <div class="section">
+      <div class="section-head"><h3>Recent Entries</h3></div>
+      <div id="dashTable"></div>
+    </div>
+  </div>
+
+  <!-- INWARD -->
+  <div id="page-inward" class="page">
+    <div class="section">
+      <div class="section-head"><h3>📥 Inward Entry</h3></div>
+      <div class="section-body">
+        <div class="warn" id="inwWarn">⚠ Pehle company select karo (sidebar mein).</div>
+        <div class="fgrid">
+          <div class="fg"><label>Date</label><input type="date" id="iDate"></div>
+          <div class="fg"><label>Party Name (se liya)</label><input type="text" id="iParty" placeholder="e.g. Ramesh Traders"></div>
+          <div class="fg"><label>Bags</label><input type="number" id="iBags" min="0" placeholder="0" oninput="iCalc()"></div>
+          <div class="fg"><label>Wt. per Bag (KG)</label><input type="number" id="iWpb" min="0" step="0.01" placeholder="50" oninput="iCalc()"></div>
+          <div class="fg"><label>Total KG</label><input type="number" id="iKg" min="0" step="0.01" placeholder="0" oninput="iKgMt()"></div>
+          <div class="fg"><label>Total MT</label><input type="number" id="iMt" min="0" step="0.001" placeholder="0" oninput="iMtKg()"></div>
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-green" onclick="saveInward()">✓ Save Inward</button>
+          <button class="btn btn-outline" onclick="clearInward()">Clear</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- OUTWARD -->
+  <div id="page-outward" class="page">
+    <div class="section">
+      <div class="section-head"><h3>📤 Outward Entry</h3></div>
+      <div class="section-body">
+        <div class="warn" id="outWarn">⚠ Pehle company select karo (sidebar mein).</div>
+        <div class="fgrid">
+          <div class="fg"><label>Date</label><input type="date" id="oDate"></div>
+          <div class="fg"><label>Party Name (ko diya)</label><input type="text" id="oParty" placeholder="e.g. Suresh Mills"></div>
+          <div class="fg"><label>Bags</label><input type="number" id="oBags" min="0" placeholder="0" oninput="oCalc()"></div>
+          <div class="fg"><label>Wt. per Bag (KG)</label><input type="number" id="oWpb" min="0" step="0.01" placeholder="50" oninput="oCalc()"></div>
+          <div class="fg"><label>Total KG</label><input type="number" id="oKg" min="0" step="0.01" placeholder="0" oninput="oKgMt()"></div>
+          <div class="fg"><label>Total MT</label><input type="number" id="oMt" min="0" step="0.001" placeholder="0" oninput="oMtKg()"></div>
+          <div class="fg"><label>Grain Type</label>
+            <select id="oGrain"><option>SBD</option><option>BD</option><option>CD</option><option>FMD</option><option>WD</option><option>Other</option></select>
+          </div>
+          <div class="fg"><label>MOIS %</label><input type="number" id="oMois" min="0" max="100" step="0.01" placeholder="0"></div>
+          <div class="fg"><label>Damaged %</label><input type="number" id="oDmg" min="0" max="100" step="0.01" placeholder="0"></div>
+          <div class="fg"><label>Discolored %</label><input type="number" id="oDis" min="0" max="100" step="0.01" placeholder="0"></div>
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-red" onclick="saveOutward()">✓ Save Outward</button>
+          <button class="btn btn-outline" onclick="clearOutward()">Clear</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RECORDS -->
+  <div id="page-records" class="page">
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('all',this)">All</div>
+      <div class="tab" onclick="switchTab('in',this)">Inward</div>
+      <div class="tab" onclick="switchTab('out',this)">Outward</div>
+    </div>
+    <div class="toolbar">
+      <div class="search-wrap"><input type="text" id="recSearch" placeholder="Party name se search..." oninput="renderRecords()"></div>
+      <input type="date" id="recDate" class="btn btn-outline btn-sm" onchange="renderRecords()" style="cursor:pointer">
+      <button class="btn btn-outline btn-sm" onclick="document.getElementById('recDate').value='';renderRecords()">Clear</button>
+    </div>
+    <div class="section" style="padding:0"><div id="recTable"></div></div>
+  </div>
+
+  <!-- COMPANIES -->
+  <div id="page-companies" class="page">
+    <div class="section">
+      <div class="section-head"><h3>New Company</h3></div>
+      <div class="section-body">
+        <div class="fgrid">
+          <div class="fg"><label>Company Name</label><input type="text" id="cName" placeholder="e.g. Sunrise Agro Pvt Ltd"></div>
+          <div class="fg"><label>Location (optional)</label><input type="text" id="cLoc" placeholder="e.g. Patna, Bihar"></div>
+        </div>
+        <div class="form-actions"><button class="btn btn-green" onclick="addCompany()">+ Add Company</button></div>
+      </div>
+    </div>
+    <div class="section" style="padding:0"><div id="coList"></div></div>
+  </div>
+</div>
+</div>
+
+<!-- EDIT MODAL -->
+<div class="modal-bg" id="editModal">
+  <div class="modal">
+    <div class="modal-head"><h3 id="editTitle">Edit Entry</h3><button class="x-btn" onclick="closeModal()">✕</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="eId"><input type="hidden" id="eType">
+      <div class="fgrid">
+        <div class="fg"><label>Date</label><input type="date" id="eDate"></div>
+        <div class="fg"><label>Party</label><input type="text" id="eParty"></div>
+        <div class="fg"><label>Bags</label><input type="number" id="eBags" oninput="eCalc()"></div>
+        <div class="fg"><label>Wt/Bag (KG)</label><input type="number" id="eWpb" oninput="eCalc()" step="0.01"></div>
+        <div class="fg"><label>Total KG</label><input type="number" id="eKg" step="0.01" oninput="eKgMt()"></div>
+        <div class="fg"><label>Total MT</label><input type="number" id="eMt" step="0.001" oninput="eMtKg()"></div>
+        <div class="fg" id="eGrainWrap"><label>Grain Type</label>
+          <select id="eGrain"><option>SBD</option><option>BD</option><option>CD</option><option>FMD</option><option>WD</option><option>Other</option></select>
+        </div>
+        <div class="fg" id="eMoisWrap"><label>MOIS %</label><input type="number" id="eMois" step="0.01"></div>
+        <div class="fg" id="eDmgWrap"><label>Damaged %</label><input type="number" id="eDmg" step="0.01"></div>
+        <div class="fg" id="eDisWrap"><label>Discolored %</label><input type="number" id="eDis" step="0.01"></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-green" onclick="updateEntry()">Save</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+<script>
+let S={companies:[],active:null,entries:{}};
+let recTab='all';
+function save(){localStorage.setItem('mwm3',JSON.stringify(S));}
+function load(){const d=localStorage.getItem('mwm3');if(d)S=JSON.parse(d);}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,5);}
+function today(){return new Date().toISOString().split('T')[0];}
+load();
+document.getElementById('iDate').value=today();
+document.getElementById('oDate').value=today();
+renderCoSelect();renderCoList();renderDash();
+
+const TITLES={dashboard:'Dashboard',inward:'Inward Entry',outward:'Outward Entry',records:'All Records',companies:'Companies'};
+function go(id,el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.n-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  if(el)el.classList.add('active');
+  document.getElementById('ptitle').textContent=TITLES[id];
+  closeSB();
+  if(id==='dashboard')renderDash();
+  if(id==='records')renderRecords();
+  if(id==='companies')renderCoList();
+  if(id==='inward')chkW('inwWarn');
+  if(id==='outward')chkW('outWarn');
+}
+function toggleSB(){document.getElementById('sidebar').classList.toggle('open');document.getElementById('sbo').classList.toggle('show');}
+function closeSB(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sbo').classList.remove('show');}
+
+function addCompany(){
+  const name=document.getElementById('cName').value.trim();
+  const loc=document.getElementById('cLoc').value.trim();
+  if(!name)return toast('Company name daalo');
+  if(S.companies.find(c=>c.name.toLowerCase()===name.toLowerCase()))return toast('Company pehle se hai');
+  const co={id:uid(),name,loc,created:new Date().toISOString()};
+  S.companies.push(co);S.entries[co.id]=[];save();
+  document.getElementById('cName').value='';document.getElementById('cLoc').value='';
+  renderCoSelect();renderCoList();toast('Company add ho gayi ✓');
+}
+function deleteCo(id){
+  if(!confirm('Ye company aur uske saare entries delete honge?'))return;
+  S.companies=S.companies.filter(c=>c.id!==id);delete S.entries[id];
+  if(S.active===id){S.active=null;document.getElementById('coSelect').value='';}
+  save();renderCoSelect();renderCoList();renderDash();toast('Delete ho gaya');
+}
+function switchCo(id){S.active=id||null;save();renderDash();renderRecords();chkW('inwWarn');chkW('outWarn');}
+function renderCoSelect(){
+  const sel=document.getElementById('coSelect');
+  sel.innerHTML='<option value="">— Select —</option>';
+  S.companies.forEach(c=>{const o=document.createElement('option');o.value=c.id;o.textContent=c.name;if(c.id===S.active)o.selected=true;sel.appendChild(o);});
+}
+function renderCoList(){
+  const el=document.getElementById('coList');
+  if(!S.companies.length){el.innerHTML='<div class="empty"><p>Koi company nahi. Upar se add karo.</p></div>';return;}
+  el.innerHTML=`<div class="tbl-wrap"><table>
+    <thead><tr><th>Company</th><th>Location</th><th>Inward MT</th><th>Outward MT</th><th>Net Stock</th><th></th></tr></thead>
+    <tbody>${S.companies.map(c=>{
+      const ents=S.entries[c.id]||[];
+      const inMt=ents.filter(e=>e.type==='in').reduce((s,e)=>s+(e.mt||0),0);
+      const outMt=ents.filter(e=>e.type==='out').reduce((s,e)=>s+(e.mt||0),0);
+      return`<tr><td><strong>${c.name}</strong></td><td>${c.loc||'—'}</td>
+      <td><span class="badge badge-green">${inMt.toFixed(2)}</span></td>
+      <td><span class="badge badge-red">${outMt.toFixed(2)}</span></td>
+      <td><strong>${(inMt-outMt).toFixed(2)} MT</strong></td>
+      <td><button class="btn btn-outline btn-icon btn-sm" style="color:var(--red)" onclick="deleteCo('${c.id}')">🗑</button></td></tr>`;
+    }).join('')}</tbody></table></div>`;
+}
+function chkW(id){document.getElementById(id).style.display=S.active?'none':'block';}
+
+function iCalc(){const b=parseFloat(document.getElementById('iBags').value)||0,w=parseFloat(document.getElementById('iWpb').value)||0;if(b&&w){const kg=b*w;document.getElementById('iKg').value=kg.toFixed(2);document.getElementById('iMt').value=(kg/1000).toFixed(3);}}
+function iKgMt(){const kg=parseFloat(document.getElementById('iKg').value)||0;document.getElementById('iMt').value=(kg/1000).toFixed(3);}
+function iMtKg(){const mt=parseFloat(document.getElementById('iMt').value)||0;document.getElementById('iKg').value=(mt*1000).toFixed(2);}
+function oCalc(){const b=parseFloat(document.getElementById('oBags').value)||0,w=parseFloat(document.getElementById('oWpb').value)||0;if(b&&w){const kg=b*w;document.getElementById('oKg').value=kg.toFixed(2);document.getElementById('oMt').value=(kg/1000).toFixed(3);}}
+function oKgMt(){const kg=parseFloat(document.getElementById('oKg').value)||0;document.getElementById('oMt').value=(kg/1000).toFixed(3);}
+function oMtKg(){const mt=parseFloat(document.getElementById('oMt').value)||0;document.getElementById('oKg').value=(mt*1000).toFixed(2);}
+
+function saveInward(){
+  if(!S.active)return toast('Pehle company select karo');
+  const date=document.getElementById('iDate').value,party=document.getElementById('iParty').value.trim();
+  const bags=parseFloat(document.getElementById('iBags').value)||0,kg=parseFloat(document.getElementById('iKg').value)||0,mt=parseFloat(document.getElementById('iMt').value)||0;
+  if(!date||!party)return toast('Date aur party naam zaroori hai');
+  if(!bags&&!kg)return toast('Bags ya weight daalo');
+  S.entries[S.active].unshift({id:uid(),type:'in',date,party,bags,kg,mt,created:new Date().toISOString()});
+  save();clearInward();renderDash();toast('Inward save ho gaya ✓');
+}
+function saveOutward(){
+  if(!S.active)return toast('Pehle company select karo');
+  const date=document.getElementById('oDate').value,party=document.getElementById('oParty').value.trim();
+  const bags=parseFloat(document.getElementById('oBags').value)||0,kg=parseFloat(document.getElementById('oKg').value)||0,mt=parseFloat(document.getElementById('oMt').value)||0;
+  if(!date||!party)return toast('Date aur party naam zaroori hai');
+  if(!bags&&!kg)return toast('Bags ya weight daalo');
+  S.entries[S.active].unshift({id:uid(),type:'out',date,party,bags,kg,mt,
+    grain:document.getElementById('oGrain').value,
+    mois:parseFloat(document.getElementById('oMois').value)||0,
+    dmg:parseFloat(document.getElementById('oDmg').value)||0,
+    dis:parseFloat(document.getElementById('oDis').value)||0,
+    created:new Date().toISOString()});
+  save();clearOutward();renderDash();toast('Outward save ho gaya ✓');
+}
+function clearInward(){['iParty','iBags','iWpb','iKg','iMt'].forEach(id=>document.getElementById(id).value='');document.getElementById('iDate').value=today();}
+function clearOutward(){['oParty','oBags','oWpb','oKg','oMt','oMois','oDmg','oDis'].forEach(id=>document.getElementById(id).value='');document.getElementById('oDate').value=today();document.getElementById('oGrain').value='SBD';}
+
+function getEnts(){return S.active?S.entries[S.active]||[]:Object.values(S.entries).flat();}
+
+function renderDash(){
+  const ents=getEnts();
+  const inE=ents.filter(e=>e.type==='in'),outE=ents.filter(e=>e.type==='out');
+  const inMt=inE.reduce((s,e)=>s+(e.mt||0),0),outMt=outE.reduce((s,e)=>s+(e.mt||0),0);
+  const todayInMt=inE.filter(e=>e.date===today()).reduce((s,e)=>s+(e.mt||0),0);
+  document.getElementById('dashStats').innerHTML=`
+    <div class="scard green"><div class="scard-label">Total Inward</div><div class="scard-val">${inMt.toFixed(2)}</div><div class="scard-sub">MT | ${inE.reduce((s,e)=>s+(e.bags||0),0).toLocaleString()} bags</div></div>
+    <div class="scard red"><div class="scard-label">Total Outward</div><div class="scard-val">${outMt.toFixed(2)}</div><div class="scard-sub">MT | ${outE.reduce((s,e)=>s+(e.bags||0),0).toLocaleString()} bags</div></div>
+    <div class="scard gold"><div class="scard-label">Net Stock</div><div class="scard-val">${(inMt-outMt).toFixed(2)}</div><div class="scard-sub">MT baaki hai</div></div>
+    <div class="scard"><div class="scard-label">Aaj Inward</div><div class="scard-val" style="color:var(--text)">${todayInMt.toFixed(2)}</div><div class="scard-sub">MT aaj aaya</div></div>`;
+  const recent=[...ents].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,30);
+  if(!recent.length){document.getElementById('dashTable').innerHTML='<div class="empty"><p>Koi entry nahi. Inward ya Outward se shuru karo.</p></div>';return;}
+  document.getElementById('dashTable').innerHTML=`<div class="tbl-wrap"><table>
+    <thead><tr><th>Type</th><th>Date</th><th>Party</th><th>Bags</th><th>MT</th></tr></thead>
+    <tbody>${recent.map(e=>`<tr>
+      <td>${e.type==='in'?'<span class="badge badge-green">IN</span>':'<span class="badge badge-red">OUT</span>'}</td>
+      <td>${e.date}</td><td><strong>${e.party}</strong></td>
+      <td>${(e.bags||0).toLocaleString()}</td><td>${(e.mt||0).toFixed(3)}</td>
+    </tr>`).join('')}</tbody></table></div>`;
+}
+
+function switchTab(t,el){recTab=t;document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));el.classList.add('active');renderRecords();}
+function renderRecords(){
+  let ents=getEnts();
+  const search=document.getElementById('recSearch').value.toLowerCase();
+  const date=document.getElementById('recDate').value;
+  if(recTab==='in')ents=ents.filter(e=>e.type==='in');
+  if(recTab==='out')ents=ents.filter(e=>e.type==='out');
+  if(search)ents=ents.filter(e=>e.party.toLowerCase().includes(search));
+  if(date)ents=ents.filter(e=>e.date===date);
+  ents=[...ents].sort((a,b)=>b.date.localeCompare(a.date));
+  const el=document.getElementById('recTable');
+  if(!ents.length){el.innerHTML='<div class="empty"><p>Koi record nahi mila.</p></div>';return;}
+  const showQ=recTab!=='in';
+  el.innerHTML=`<div class="tbl-wrap"><table>
+    <thead><tr><th>Type</th><th>Date</th><th>Party</th><th>Bags</th><th>KG</th><th>MT</th>${showQ?'<th>Grain</th><th>MOIS%</th>':''}<th>Actions</th></tr></thead>
+    <tbody>${ents.map(e=>`<tr>
+      <td>${e.type==='in'?'<span class="badge badge-green">IN</span>':'<span class="badge badge-red">OUT</span>'}</td>
+      <td>${e.date}</td><td><strong>${e.party}</strong></td>
+      <td>${(e.bags||0).toLocaleString()}</td><td>${(e.kg||0).toLocaleString()}</td><td>${(e.mt||0).toFixed(3)}</td>
+      ${showQ?`<td>${e.grain||'—'}</td><td>${e.mois||'—'}</td>`:''}
+      <td style="white-space:nowrap">
+        <button class="btn btn-outline btn-icon btn-sm" onclick="openEdit('${e.id}')">✏</button>
+        <button class="btn btn-outline btn-icon btn-sm" style="color:var(--red)" onclick="delEntry('${e.id}')">🗑</button>
+      </td></tr>`).join('')}</tbody></table></div>`;
+}
+
+function delEntry(id){
+  if(!confirm('Ye entry delete karein?'))return;
+  for(const cid in S.entries)S.entries[cid]=S.entries[cid].filter(e=>e.id!==id);
+  save();renderRecords();renderDash();renderCoList();toast('Delete ho gaya');
+}
+
+function openEdit(id){
+  let entry;for(const cid in S.entries){entry=S.entries[cid].find(e=>e.id===id);if(entry)break;}
+  if(!entry)return;
+  document.getElementById('eId').value=id;document.getElementById('eType').value=entry.type;
+  document.getElementById('editTitle').textContent=entry.type==='in'?'✏ Edit Inward':'✏ Edit Outward';
+  document.getElementById('eDate').value=entry.date;document.getElementById('eParty').value=entry.party;
+  document.getElementById('eBags').value=entry.bags||'';
+  document.getElementById('eWpb').value=(entry.bags&&entry.kg)?(entry.kg/entry.bags).toFixed(2):'';
+  document.getElementById('eKg').value=entry.kg||'';document.getElementById('eMt').value=entry.mt||'';
+  const isOut=entry.type==='out';
+  ['eGrainWrap','eMoisWrap','eDmgWrap','eDisWrap'].forEach(id=>document.getElementById(id).style.display=isOut?'':'none');
+  if(isOut){document.getElementById('eGrain').value=entry.grain||'SBD';document.getElementById('eMois').value=entry.mois||'';document.getElementById('eDmg').value=entry.dmg||'';document.getElementById('eDis').value=entry.dis||'';}
+  document.getElementById('editModal').classList.add('open');
+}
+function eCalc(){const b=parseFloat(document.getElementById('eBags').value)||0,w=parseFloat(document.getElementById('eWpb').value)||0;if(b&&w){const kg=b*w;document.getElementById('eKg').value=kg.toFixed(2);document.getElementById('eMt').value=(kg/1000).toFixed(3);}}
+function eKgMt(){const kg=parseFloat(document.getElementById('eKg').value)||0;document.getElementById('eMt').value=(kg/1000).toFixed(3);}
+function eMtKg(){const mt=parseFloat(document.getElementById('eMt').value)||0;document.getElementById('eKg').value=(mt*1000).toFixed(2);}
+function closeModal(){document.getElementById('editModal').classList.remove('open');}
+function updateEntry(){
+  const id=document.getElementById('eId').value,type=document.getElementById('eType').value;
+  for(const cid in S.entries){
+    const idx=S.entries[cid].findIndex(e=>e.id===id);
+    if(idx!==-1){
+      S.entries[cid][idx]={...S.entries[cid][idx],
+        date:document.getElementById('eDate').value,party:document.getElementById('eParty').value,
+        bags:parseFloat(document.getElementById('eBags').value)||0,
+        kg:parseFloat(document.getElementById('eKg').value)||0,
+        mt:parseFloat(document.getElementById('eMt').value)||0,
+        ...(type==='out'?{grain:document.getElementById('eGrain').value,mois:parseFloat(document.getElementById('eMois').value)||0,dmg:parseFloat(document.getElementById('eDmg').value)||0,dis:parseFloat(document.getElementById('eDis').value)||0}:{})
+      };break;
+    }
+  }
+  save();closeModal();renderRecords();renderDash();renderCoList();toast('Update ho gaya ✓');
+}
+
+function exportCSV(){
+  const ents=getEnts();if(!ents.length)return toast('Koi data nahi');
+  const rows=[['Type','Date','Party','Bags','KG','MT','Grain','MOIS%','Damaged%','Discolored%']];
+  ents.forEach(e=>rows.push([e.type==='in'?'Inward':'Outward',e.date,e.party,e.bags,e.kg,e.mt,e.grain||'',e.mois||'',e.dmg||'',e.dis||'']));
+  const csv=rows.map(r=>r.map(v=>`"${v??''}"`).join(',')).join('\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download=`maize-${today()}.csv`;a.click();
+  toast('CSV export ho gaya ✓');
+}
+
+let tt;
+function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>el.classList.remove('show'),2500);}
+document.getElementById('editModal').addEventListener('click',function(e){if(e.target===this)closeModal();});
+</script>
+</body>
+</html>
